@@ -1,0 +1,416 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xl, 2rem);
+  width: 100%;
+}
+
+/* Guidance Section */
+.guidanceCard {
+  background-color: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-xl, 1rem);
+  padding: 1.75rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.guidanceHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.guidanceEyebrow {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--primary-dark, #c2410c);
+}
+
+.guidanceTitle {
+  font-size: 1.625rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.guidanceLead {
+  font-size: 0.9375rem;
+  color: var(--text-secondary, #475569);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Callout Box */
+.calloutBox {
+  background-color: var(--surface-container-low, #f8fafc);
+  border: 1px solid var(--border, #e2e8f0);
+  border-left: 4px solid var(--primary, #f97316);
+  border-radius: var(--radius-lg, 0.75rem);
+  padding: 1.5rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.calloutTitle {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  margin: 0;
+}
+
+.calloutText {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #475569);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.checklistHeading {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+  margin: 0 0 0.5rem 0;
+}
+
+.checklist {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #475569);
+  line-height: 1.5;
+}
+
+.checklist li strong {
+  color: var(--text-primary, #0f172a);
+}
+
+/* Form Card */
+.formCard {
+  background-color: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-xl, 1rem);
+  padding: 2rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.label {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary, #0f172a);
+}
+
+.fieldHelper {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary, #64748b);
+  margin: 0 0 0.375rem 0;
+}
+
+.input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  font-size: 0.9375rem;
+  color: var(--text-primary, #0f172a);
+  background-color: #ffffff;
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: var(--radius-md, 0.5rem);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  outline: none;
+  font-family: inherit;
+}
+
+.input:focus {
+  border-color: var(--primary, #f97316);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.input--error {
+  border-color: var(--error, #ef4444);
+}
+
+.errorText {
+  font-size: 0.8125rem;
+  color: var(--error, #ef4444);
+  margin: 0.25rem 0 0 0;
+  font-weight: 500;
+}
+
+/* Markdown Toolbar & Textarea */
+.editorWrap {
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: var(--radius-md, 0.5rem);
+  overflow: hidden;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  background-color: #ffffff;
+}
+
+.editorWrap:focus-within {
+  border-color: var(--primary, #f97316);
+  box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.15);
+}
+
+.editorWrap--error {
+  border-color: var(--error, #ef4444);
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background-color: var(--surface-container-low, #f8fafc);
+  border-bottom: 1px solid var(--border, #e2e8f0);
+}
+
+.toolbarButtons {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.toolBtn {
+  background: none;
+  border: none;
+  padding: 0.35rem 0.5rem;
+  border-radius: var(--radius-sm, 0.25rem);
+  color: var(--text-secondary, #475569);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.15s ease;
+}
+
+.toolBtn:hover {
+  background-color: var(--surface-container-high, #e2e8f0);
+  color: var(--text-primary, #0f172a);
+}
+
+.charCount {
+  font-size: 0.75rem;
+  color: var(--text-tertiary, #64748b);
+}
+
+.textarea {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  font-size: 0.9375rem;
+  color: var(--text-primary, #0f172a);
+  background-color: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
+  min-height: 14rem;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+/* AI Coach Row */
+.aiCoachRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.coachBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.875rem;
+  background-color: var(--surface-container-low, #f1f5f9);
+  border: 1px solid var(--border, #cbd5e1);
+  border-radius: var(--radius-md, 0.5rem);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-secondary, #334155);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.coachBtn:hover:not(:disabled) {
+  background-color: var(--primary-light, #ffedd5);
+  border-color: var(--primary, #f97316);
+  color: var(--primary-dark, #c2410c);
+}
+
+.coachBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.coachCaption {
+  font-size: 0.8125rem;
+  color: var(--text-tertiary, #64748b);
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* AI Coach Feedback Box */
+.coachFeedbackBox {
+  background-color: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: var(--radius-lg, 0.75rem);
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.coachFeedbackHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.coachFeedbackTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.coachSparkle {
+  color: #16a34a;
+}
+
+.coachFeedbackTitle {
+  font-size: 0.875rem;
+  color: #166534;
+}
+
+.coachTipsList {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.coachTipItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #14532d;
+  line-height: 1.4;
+}
+
+.tipCheckIcon {
+  color: #16a34a;
+  flex-shrink: 0;
+  margin-top: 0.125rem;
+}
+
+.coachErrorBanner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--error-light, #fee2e2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md, 0.5rem);
+  color: #b91c1c;
+  font-size: 0.8125rem;
+}
+
+.dismissBtn {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.2rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Action Buttons */
+.actionRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.cancelBtn {
+  padding: 0.625rem 1.25rem;
+  background: none;
+  border: none;
+  color: var(--text-secondary, #475569);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: var(--radius-md, 0.5rem);
+  transition: color 0.15s ease;
+}
+
+.cancelBtn:hover:not(:disabled) {
+  color: var(--text-primary, #0f172a);
+}
+
+.submitBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.5rem;
+  background-color: var(--primary, #f97316);
+  color: #ffffff;
+  border: none;
+  border-radius: var(--radius-md, 0.5rem);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background-color: var(--primary-hover, #ea580c);
+}
+
+.submitBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.errorAlert {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1rem;
+  background-color: var(--error-light, #fee2e2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: var(--radius-md, 0.5rem);
+  color: var(--error, #ef4444);
+  font-size: 0.875rem;
+}

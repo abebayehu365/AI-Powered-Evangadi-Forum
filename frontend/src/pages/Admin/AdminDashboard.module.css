@@ -1,0 +1,616 @@
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.titleArea {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.title {
+  font-size: 1.85rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin: 0;
+  color: #0f172a;
+}
+
+:global(.dark) .title {
+  color: #f8fafc;
+}
+
+.adminBadge {
+  background: #dc2626;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.25rem 0.6rem;
+  border-radius: 9999px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.subtitle {
+  color: #64748b;
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+:global(.dark) .subtitle {
+  color: #94a3b8;
+}
+
+/* Stats Cards */
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.statCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+:global(.dark) .statCard {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.statIcon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+}
+
+.statInfo {
+  display: flex;
+  flex-direction: column;
+}
+
+.statValue {
+  font-size: 1.5rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.statLabel {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 600;
+}
+
+:global(.dark) .statLabel {
+  color: #94a3b8;
+}
+
+/* Tab Filters */
+.tabsRow {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1.5rem;
+  overflow-x: auto;
+}
+
+:global(.dark) .tabsRow {
+  border-color: #334155;
+}
+
+.tabBtn {
+  background: none;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+:global(.dark) .tabBtn {
+  color: #94a3b8;
+}
+
+.tabBtn:hover {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+:global(.dark) .tabBtn:hover {
+  background: #334155;
+  color: #f8fafc;
+}
+
+.tabBtnActive {
+  background: #0284c7 !important;
+  color: white !important;
+}
+
+/* Reports List */
+.reportsList {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.reportCard {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: all 0.2s;
+}
+
+:global(.dark) .reportCard {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f8fafc;
+}
+
+.reportHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.metaRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.typeBadge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  padding: 0.2rem 0.5rem;
+  border-radius: 6px;
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+:global(.dark) .typeBadge {
+  background: rgba(2, 132, 199, 0.2);
+  color: #38bdf8;
+}
+
+.reasonBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.2rem 0.55rem;
+  border-radius: 9999px;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  text-transform: uppercase;
+}
+
+:global(.dark) .reasonBadge {
+  background: rgba(220, 38, 38, 0.2);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #f87171;
+}
+
+.statusBadge {
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.25rem 0.65rem;
+  border-radius: 9999px;
+  text-transform: capitalize;
+}
+
+.statusPending {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+:global(.dark) .statusPending {
+  background: rgba(234, 179, 8, 0.2);
+  color: #facc15;
+}
+
+.statusActioned {
+  background: #dcfce7;
+  color: #166534;
+}
+
+:global(.dark) .statusActioned {
+  background: rgba(34, 197, 94, 0.2);
+  color: #4ade80;
+}
+
+.statusDismissed {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+:global(.dark) .statusDismissed {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+.contentBox {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+:global(.dark) .contentBox {
+  background: #0f172a;
+  border-color: #334155;
+}
+
+.contentTitle {
+  font-weight: 700;
+  font-size: 1rem;
+  margin: 0 0 0.4rem 0;
+  color: #0284c7;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.contentSnippet {
+  font-size: 0.88rem;
+  color: #475569;
+  margin: 0;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  max-height: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+:global(.dark) .contentSnippet {
+  color: #94a3b8;
+}
+
+.reportDetailsBox {
+  background: #fffbeb;
+  border-left: 4px solid #f59e0b;
+  padding: 0.75rem 1rem;
+  border-radius: 0 8px 8px 0;
+  font-size: 0.85rem;
+  color: #78350f;
+}
+
+:global(.dark) .reportDetailsBox {
+  background: rgba(245, 158, 11, 0.1);
+  color: #fde68a;
+  border-left-color: #fbbf24;
+}
+
+.actionsRow {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+:global(.dark) .actionsRow {
+  border-color: #334155;
+}
+
+.actionBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.btnDismiss {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.btnDismiss:hover {
+  background: #e2e8f0;
+}
+
+.btnActioned {
+  background: #10b981;
+  color: white;
+}
+
+.btnActioned:hover {
+  background: #059669;
+}
+
+.btnDelete {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+:global(.dark) .btnDelete {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #f87171;
+}
+
+.btnDelete:hover {
+  background: #dc2626;
+  color: white;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 4rem 2rem;
+  background: #ffffff;
+  border: 1px dashed #cbd5e1;
+  border-radius: 16px;
+  color: #64748b;
+}
+
+:global(.dark) .emptyState {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+/* Main Top Navigation Tabs */
+.mainTabs {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.75rem;
+  flex-wrap: wrap;
+}
+
+.mainTabBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: #475569;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+:global(.dark) .mainTabBtn {
+  background: #1e293b;
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.mainTabBtn:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+}
+
+:global(.dark) .mainTabBtn:hover {
+  background: #334155;
+}
+
+.mainTabBtnActive {
+  background: #0284c7 !important;
+  color: #ffffff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.25);
+}
+
+/* Search Bar */
+.searchBarRow {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.searchInputWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  padding: 0.6rem 0.85rem;
+}
+
+:global(.dark) .searchInputWrap {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.searchInput {
+  border: none;
+  background: transparent;
+  width: 100%;
+  font-size: 0.9rem;
+  color: inherit;
+  outline: none;
+}
+
+.searchBtn {
+  padding: 0.6rem 1.25rem;
+  border-radius: 10px;
+  border: none;
+  background: #0284c7;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.88rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.searchBtn:hover {
+  background: #0369a1;
+}
+
+/* User & Question Tables */
+.tableWrap {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  overflow-x: auto;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+:global(.dark) .tableWrap {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.usersTable {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.88rem;
+}
+
+.usersTable th {
+  padding: 1rem 1.25rem;
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+:global(.dark) .usersTable th {
+  background: #0f172a;
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+.usersTable td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+:global(.dark) .usersTable td {
+  border-color: #334155;
+}
+
+.roleBadge {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.2rem 0.6rem;
+  border-radius: 9999px;
+  display: inline-block;
+  text-transform: uppercase;
+}
+
+.roleAdmin {
+  background: #fee2e2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+:global(.dark) .roleAdmin {
+  background: rgba(220, 38, 38, 0.2);
+  color: #f87171;
+}
+
+.roleCoAdmin {
+  background: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fde68a;
+}
+
+:global(.dark) .roleCoAdmin {
+  background: rgba(217, 119, 6, 0.2);
+  color: #fbbf24;
+}
+
+.roleUser {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+:global(.dark) .roleUser {
+  background: #334155;
+  color: #94a3b8;
+}
+
+.btnAdmin {
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.btnAdmin:hover {
+  background: #dc2626;
+  color: white;
+}
+
+.btnCoAdmin {
+  background: #fef3c7;
+  color: #d97706;
+  border-color: #fde68a;
+}
+
+.btnCoAdmin:hover {
+  background: #d97706;
+  color: white;
+}
+
+.btnUser {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.btnUser:hover {
+  background: #cbd5e1;
+}

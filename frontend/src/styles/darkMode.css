@@ -1,0 +1,73 @@
+/**
+ * darkMode.css — CSS variable overrides for [data-theme="dark"].
+ *
+ * Applied by ThemeContext via `document.documentElement.dataset.theme = 'dark'`.
+ * Every token here shadows a value defined in index.css :root.
+ */
+
+[data-theme='dark'] {
+  /* Primary */
+  --primary:             #fb923c;   /* orange-400 — slightly lighter for dark bg */
+  --primary-hover:       #f97316;   /* orange-500 */
+  --primary-light:       #431407;   /* dark orange tint */
+  --primary-dark:        #fdba74;   /* orange-300 */
+  --primary-container:   #c2410c;
+
+  /* Secondary */
+  --secondary:           #94a3b8;   /* slate-400 */
+  --secondary-hover:     #cbd5e1;   /* slate-300 */
+
+  /* Tertiary */
+  --tertiary:            #f1f5f9;   /* slate-100 */
+  --tertiary-container:  #1e293b;   /* slate-800 */
+
+  /* Surface */
+  --surface:                  #1e293b;   /* slate-800 */
+  --surface-hover:            #263349;
+  --surface-container-low:    #0f172a;   /* slate-900 */
+  --surface-container-high:   #334155;   /* slate-700 */
+  --surface-container-highest:#475569;   /* slate-600 */
+
+  /* Text */
+  --text-primary:      #f1f5f9;   /* slate-100 */
+  --text-secondary:    #cbd5e1;   /* slate-300 */
+  --text-tertiary:     #94a3b8;   /* slate-400 */
+  --text-placeholder:  #475569;   /* slate-600 */
+  --text-inverse:      #0f172a;
+
+  /* Border */
+  --border:        #334155;
+  --border-hover:  #475569;
+  --border-focus:  #fb923c;
+
+  /* Status */
+  --success:        #34d399;   /* emerald-400 */
+  --success-light:  #064e3b;
+  --warning:        #fbbf24;   /* amber-400 */
+  --warning-light:  #451a03;
+  --error:          #f87171;   /* red-400 */
+  --error-light:    #450a0a;
+  --info:           #60a5fa;   /* blue-400 */
+  --info-light:     #1e3a5f;
+
+  /* Background */
+  --background:           #0f172a;   /* slate-900 */
+  --background-secondary: #1e293b;   /* slate-800 */
+
+  /* Shadows — more visible on dark */
+  --shadow-sm:    0 1px 2px 0 rgba(0,0,0,0.4);
+  --shadow-md:    0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -1px rgba(0,0,0,0.3);
+  --shadow-lg:    0 10px 15px -3px rgba(0,0,0,0.5), 0 4px 6px -2px rgba(0,0,0,0.3);
+  --shadow-xl:    0 20px 25px -5px rgba(0,0,0,0.6), 0 10px 10px -5px rgba(0,0,0,0.4);
+  --shadow-focus: 0 0 0 3px rgba(251,146,60,0.25);
+}
+
+/* Smooth transition when toggling */
+[data-theme='dark'] *,
+[data-theme='light'] * {
+  transition:
+    background-color 250ms ease,
+    border-color     250ms ease,
+    color            200ms ease,
+    box-shadow       250ms ease;
+}
