@@ -43,7 +43,7 @@ export const getTelebirrApiConfigStatusService = () => {
     configured,
     shortCode: configured ? process.env.TELEBIRR_SHORT_CODE : null,
     receiveName: process.env.TELEBIRR_RECEIVE_NAME || 'ForumStudy',
-    manualRecipientNumber: '0941427950',
+    manualRecipientNumber: '0916550847',
     mode: configured ? 'live_api' : 'sandbox_and_manual',
   };
 };
@@ -252,7 +252,7 @@ export const initiateTelebirrPaymentService = async ({ userId, phoneNumber, tran
   const cleanCode = (transactionCode || '').trim();
   if (!cleanCode || cleanCode.length < 4) {
     throw new BadRequestError(
-      'Please enter the Telebirr Transaction Number / SMS confirmation code from your transfer to 0941427950.',
+      'Please enter the Telebirr Transaction Number / SMS confirmation code from your transfer to 0916550847.',
     );
   }
 

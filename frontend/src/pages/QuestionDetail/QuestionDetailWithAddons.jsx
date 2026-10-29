@@ -80,7 +80,7 @@ export default function QuestionDetailWithAddons() {
       }
     } catch (err) {
       console.error('Failed to load question detail:', err);
-      setError(err.message || 'Unable to load question details.');
+      setError('Failed to load question details.');
     } finally {
       setLoading(false);
     }
@@ -234,18 +234,14 @@ export default function QuestionDetailWithAddons() {
             Back to feed
           </button>
         </div>
-        <div className={styles.centeredState}>
-          <AlertCircle size={40} className={styles.errorIcon} />
-          <h2 className={styles.stateTitle}>Question not found</h2>
-          <p className={styles.stateText}>
-            {error || 'This question might have been removed or does not exist.'}
-          </p>
+        <div className={styles.errorCard}>
+          <p className={styles.errorMessage}>Failed to load question details.</p>
           <button
             type='button'
             className={styles.primaryBtn}
             onClick={() => navigate('/dashboard')}
           >
-            Browse all questions
+            Return to Dashboard
           </button>
         </div>
       </div>
@@ -379,6 +375,7 @@ export default function QuestionDetailWithAddons() {
               <StarRating
                 itemType='question'
                 itemId={question.id || question.question_id}
+                isAuthor={isOwner}
               />
             </div>
           </article>
@@ -415,7 +412,16 @@ export default function QuestionDetailWithAddons() {
                   const answerId = answer.id || answer.answer_id || answer.answerId || (index + 1);
 
                   return (
-                    <AnswerWithFeatures key={answerId} answerId={answerId} questionHash={activeHash}>
+                    <AnswerWithFeatures
+                      key={answerId}
+                      answerId={answerId}
+                      questionHash={activeHash}
+                      isAuthor={
+                        ansAuthorId != null &&
+                        user?.id != null &&
+                        String(ansAuthorId) === String(user.id)
+                      }
+                    >
                       <article className={styles.answerCard}>
                         <div className={styles.answerHeader}>
                           {ansAuthorId ? (

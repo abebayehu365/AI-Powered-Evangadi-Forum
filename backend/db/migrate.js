@@ -9,7 +9,13 @@ const __dirname = path.dirname(__filename);
 
 async function runMigrations() {
   const migrationsDir = path.join(__dirname, 'migrations');
-  const files = ['001_ratings.sql', '002_reports.sql', '003_follows.sql'];
+  const files = [
+    '001_ratings.sql',
+    '002_reports.sql',
+    '003_follows.sql',
+    '005_star_ratings.sql',
+    '006_profile_fields.sql',
+  ];
 
   for (const file of files) {
     const filePath = path.join(migrationsDir, file);

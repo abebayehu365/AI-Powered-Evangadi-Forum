@@ -1,5 +1,6 @@
 import express from 'express';
 import { authenticateUser } from '../../../middleware/authentication.js';
+import { profilePictureUpload } from '../config/profile-picture-upload.js';
 import {
   getProfileController,
   updateProfileController,
@@ -11,6 +12,6 @@ const router = express.Router();
 router.get('/:userId', authenticateUser, getProfileController);
 
 // PUT /api/addon/profiles/me — update own profile (must be authenticated)
-router.put('/me', authenticateUser, updateProfileController);
+router.put('/me', authenticateUser, profilePictureUpload, updateProfileController);
 
 export default router;

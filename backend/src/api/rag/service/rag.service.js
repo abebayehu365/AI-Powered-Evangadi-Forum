@@ -2,21 +2,32 @@ import 'dotenv/config';
 import fs from 'fs';
 import path from 'path';
 import { GoogleGenAI } from '@google/genai';
-import { safeExecute } from '../../../../db/config.js';
+import { db, safeExecute } from '../../../../db/config.js';
 import {
   BadRequestError,
   NotFoundError,
 } from '../../../utils/errors/index.js';
 
-const RAG_MAX_PDFS_PER_USER = parseInt(process.env.RAG_MAX_PDFS_PER_USER || '20', 10);
-const RAG_CHUNK_CHARS = parseInt(process.env.RAG_CHUNK_CHARS || '900', 10);
-const RAG_CHUNK_OVERLAP = parseInt(process.env.RAG_CHUNK_OVERLAP || '120', 10);
-const RAG_MIN_TEXT_CHARS = parseInt(process.env.RAG_MIN_TEXT_CHARS || '50', 10);
-const RAG_MAX_CHUNKS_PER_DOC = parseInt(process.env.RAG_MAX_CHUNKS_PER_DOC || '1000', 10);
-const RAG_SEARCH_THRESHOLD = parseFloat(process.env.RAG_SEARCH_THRESHOLD || '0.45');
-const GEMINI_EMBEDDING_MODEL = process.env.GEMINI_EMBEDDING_MODEL || 'gemini-embedding-001';
-const GEMINI_TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-1.5-flash-latest';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const readEnv = key => (process.env[key] || '').trim();
+const RAG_MAX_PDFS_PER_USER = parseInt(readEnv('RAG_MAX_PDFS_PER_USER') || '20', 10);
+const RAG_CHUNK_CHARS = parseInt(readEnv('RAG_CHUNK_CHARS') || '900', 10);
+const RAG_CHUNK_OVERLAP = parseInt(readEnv('RAG_CHUNK_OVERLAP') || '120', 10);
+const RAG_MIN_TEXT_CHARS = parseInt(readEnv('RAG_MIN_TEXT_CHARS') || '50', 10);
+const RAG_MAX_CHUNKS_PER_DOC = parseInt(readEnv('RAG_MAX_CHUNKS_PER_DOC') || '1000', 10);
+const RAG_SEARCH_THRESHOLD = parseFloat(readEnv('RAG_SEARCH_THRESHOLD') || '0.45');
+const GEMINI_EMBEDDING_MODEL = readEnv('GEMINI_EMBEDDING_MODEL') || 'gemini-embedding-001';
+const GEMINI_TEXT_MODEL = readEnv('GEMINI_TEXT_MODEL') || 'gemini-2.5-flash-lite';
+const GEMINI_API_KEY = readEnv('GEMINI_API_KEY');
+const GEMINI_MAX_ATTEMPTS = 3;
+const configuredEmbeddingBatchSize = parseInt(
+  readEnv('RAG_EMBEDDING_BATCH_SIZE') || '100',
+  10,
+);
+const RAG_EMBEDDING_BATCH_SIZE =
+  Number.isFinite(configuredEmbeddingBatchSize) && configuredEmbeddingBatchSize > 0
+    ? configuredEmbeddingBatchSize
+    : 100;
+const activeDocumentJobs = new Set();
 
 let genAI = null;
 if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_here') {
@@ -44,20 +55,66 @@ function calculateCosineSimilarity(vecA, vecB) {
   return magnitude === 0 ? 0 : dotProduct / magnitude;
 }
 
+async function withGeminiNetworkRetry(request) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await request();
+    } catch (error) {
+      if (error.message !== 'fetch failed' || attempt >= GEMINI_MAX_ATTEMPTS) {
+        throw error;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 500 * 2 ** (attempt - 1)));
+    }
+  }
+}
+
 async function generateEmbedding(text, taskType = 'RETRIEVAL_DOCUMENT') {
   if (!genAI) return null;
   try {
-    const response = await genAI.models.embedContent({
-      model: GEMINI_EMBEDDING_MODEL,
-      contents: text,
-      config: {
-        taskType,
-        outputDimensionality: 1536,
-      },
-    });
+    const response = await withGeminiNetworkRetry(() =>
+      genAI.models.embedContent({
+        model: GEMINI_EMBEDDING_MODEL,
+        contents: text,
+        config: {
+          taskType,
+          outputDimensionality: 1536,
+        },
+      }),
+    );
     return response.embedding?.values || response.embeddings?.[0]?.values || null;
   } catch (error) {
-    console.warn('RAG embedding error:', error.message);
+    const causeCode = error.cause?.code;
+    console.warn(
+      'RAG embedding error:',
+      error.message,
+      causeCode ? `(${causeCode})` : '',
+    );
+    return null;
+  }
+}
+
+async function generateEmbeddings(texts, taskType = 'RETRIEVAL_DOCUMENT') {
+  if (!genAI || !texts.length) return null;
+  try {
+    const response = await withGeminiNetworkRetry(() =>
+      genAI.models.embedContent({
+        model: GEMINI_EMBEDDING_MODEL,
+        contents: texts,
+        config: {
+          taskType,
+          outputDimensionality: 1536,
+        },
+      }),
+    );
+    return response.embeddings?.map(embedding => embedding.values || null) || null;
+  } catch (error) {
+    const causeCode = error.cause?.code;
+    console.warn(
+      'RAG batch embedding error:',
+      error.message,
+      causeCode ? `(${causeCode})` : '',
+    );
     return null;
   }
 }
@@ -195,6 +252,9 @@ export const deleteDocumentService = async ({ documentId, userId }) => {
  * Called after the HTTP response has already been sent.
  */
 async function processDocumentInBackground(documentId, filePath) {
+  if (activeDocumentJobs.has(String(documentId))) return;
+  activeDocumentJobs.add(String(documentId));
+
   try {
     const fileBuffer = await fs.promises.readFile(filePath);
     const { text } = await extractTextFromPdfBuffer(fileBuffer);
@@ -216,33 +276,154 @@ async function processDocumentInBackground(documentId, filePath) {
       return;
     }
 
-    for (const chunk of chunks) {
-      const chunkRes = await safeExecute(
-        `INSERT INTO document_chunks (document_id, chunk_index, content, page_start, page_end) VALUES (?, ?, ?, ?, ?)`,
-        [documentId, chunk.chunkIndex, chunk.content, chunk.pageStart, chunk.pageEnd],
+    const existingRows = await safeExecute(
+      `SELECT c.chunk_index AS chunkIndex, c.chunk_id AS chunkId,
+              v.status AS vectorStatus, JSON_LENGTH(v.embedding) AS embeddingLength
+       FROM document_chunks c
+       LEFT JOIN document_chunk_vectors v ON v.chunk_id = c.chunk_id
+       WHERE c.document_id = ?`,
+      [documentId],
+    );
+    const existingChunks = new Map(
+      existingRows.map(row => [Number(row.chunkIndex), row]),
+    );
+    const pendingChunks = chunks.filter(chunk => {
+      const existing = existingChunks.get(chunk.chunkIndex);
+      return !(
+        existing?.vectorStatus === 'ready' &&
+        Number(existing.embeddingLength) > 0
       );
-      const chunkId = chunkRes.insertId;
+    });
 
-      const embedding = await generateEmbedding(chunk.content, 'RETRIEVAL_DOCUMENT');
-      await safeExecute(
-        `INSERT INTO document_chunk_vectors (chunk_id, source_text, embedding, status) VALUES (?, ?, ?, ?)`,
-        [chunkId, chunk.content, JSON.stringify(embedding || []), embedding ? 'ready' : 'failed'],
+    let embeddingsAvailable = true;
+    for (
+      let batchStart = 0;
+      batchStart < pendingChunks.length;
+      batchStart += RAG_EMBEDDING_BATCH_SIZE
+    ) {
+      const batch = pendingChunks.slice(
+        batchStart,
+        batchStart + RAG_EMBEDDING_BATCH_SIZE,
       );
+      const batchEmbeddings = embeddingsAvailable
+        ? await generateEmbeddings(
+            batch.map(chunk => chunk.content),
+            'RETRIEVAL_DOCUMENT',
+          )
+        : null;
+      if (!batchEmbeddings || batchEmbeddings.length !== batch.length) {
+        if (embeddingsAvailable) {
+          embeddingsAvailable = false;
+          console.warn(
+            `[RAG] Embeddings unavailable for doc ${documentId}; storing remaining text for keyword search.`,
+          );
+        }
+      }
+
+      const connection = await db.getConnection();
+      try {
+        await connection.beginTransaction();
+        for (let index = 0; index < batch.length; index++) {
+          const chunk = batch[index];
+          const embedding = batchEmbeddings?.[index] || null;
+          if (!embedding) embeddingsAvailable = false;
+
+          const existing = existingChunks.get(chunk.chunkIndex);
+          let chunkId = existing?.chunkId;
+          if (!chunkId) {
+            const [chunkRes] = await connection.execute(
+              `INSERT INTO document_chunks (document_id, chunk_index, content, page_start, page_end) VALUES (?, ?, ?, ?, ?)`,
+              [
+                documentId,
+                chunk.chunkIndex,
+                chunk.content,
+                chunk.pageStart,
+                chunk.pageEnd,
+              ],
+            );
+            chunkId = chunkRes.insertId;
+          }
+          if (!chunkId) {
+            throw new Error(`Failed to store chunk ${chunk.chunkIndex + 1}`);
+          }
+
+          await connection.execute(
+            `INSERT INTO document_chunk_vectors (chunk_id, source_text, embedding, status)
+             VALUES (?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE source_text = VALUES(source_text),
+               embedding = VALUES(embedding), status = VALUES(status),
+               updated_at = CURRENT_TIMESTAMP`,
+            [
+              chunkId,
+              chunk.content,
+              JSON.stringify(embedding || []),
+              embedding ? 'ready' : 'failed',
+            ],
+          );
+        }
+        await connection.commit();
+      } catch (error) {
+        try {
+          await connection.rollback();
+        } catch (rollbackError) {
+          console.error(
+            `[RAG] Could not roll back chunk batch for doc ${documentId}:`,
+            rollbackError.message,
+          );
+        }
+        throw error;
+      } finally {
+        connection.release();
+      }
     }
 
     await safeExecute(
-      `UPDATE documents SET status = 'ready', updated_at = CURRENT_TIMESTAMP WHERE document_id = ?`,
+      `UPDATE documents SET status = 'ready', error_message = NULL, updated_at = CURRENT_TIMESTAMP WHERE document_id = ?`,
       [documentId],
     );
-    console.log(`[RAG] Document ${documentId} ready (${chunks.length} chunks).`);
+    console.log(
+      `[RAG] Document ${documentId} ready (${chunks.length} chunks; ${embeddingsAvailable ? 'semantic' : 'keyword'} search).`,
+    );
   } catch (error) {
     console.error(`[RAG] Background processing failed for doc ${documentId}:`, error.message);
     await safeExecute(
       `UPDATE documents SET status = 'failed', error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE document_id = ?`,
       [error.message.slice(0, 500), documentId],
-    ).catch(() => {});
+    ).catch(updateError => {
+      console.error(
+        `[RAG] Could not mark document ${documentId} as failed:`,
+        updateError.message,
+      );
+    });
+  } finally {
+    activeDocumentJobs.delete(String(documentId));
   }
 }
+
+export const resumeProcessingDocumentsService = async () => {
+  const rows = await safeExecute(
+    `SELECT document_id AS documentId, storage_path AS storagePath
+     FROM documents WHERE status = 'processing'`,
+    [],
+  );
+
+  for (const row of rows) {
+    const filePath = path.isAbsolute(row.storagePath)
+      ? row.storagePath
+      : path.resolve(process.cwd(), row.storagePath);
+    if (!fs.existsSync(filePath)) {
+      await safeExecute(
+        `UPDATE documents SET status = 'failed', error_message = ?, updated_at = CURRENT_TIMESTAMP WHERE document_id = ?`,
+        ['PDF file is missing from server storage; upload the document again.', row.documentId],
+      );
+      continue;
+    }
+    setImmediate(() =>
+      processDocumentInBackground(row.documentId, filePath),
+    );
+  }
+  return rows.length;
+};
 
 export const createDocumentFromUploadService = async ({ file, userId }) => {
   if (!file) {
@@ -317,6 +498,22 @@ export const searchInDocumentService = async ({ documentId, userId, query, k = 5
 
   let results = [];
 
+  const textSearchFallback = () => {
+    const qLower = query.toLowerCase();
+    return rows
+      .map(r => {
+        const occurrences = (r.excerpt.toLowerCase().match(new RegExp(qLower.replace(/[^a-z0-9]/gi, ''), 'g')) || []).length;
+        return {
+          chunkId: r.chunkId,
+          chunkIndex: r.chunkIndex,
+          score: occurrences > 0 ? 0.5 + Math.min(occurrences * 0.1, 0.45) : 0.1,
+          excerpt: r.excerpt,
+        };
+      })
+      .sort((a, b) => b.score - a.score)
+      .slice(0, normalizedK);
+  };
+
   if (queryEmbedding && Array.isArray(queryEmbedding)) {
     const scored = [];
     for (const row of rows) {
@@ -338,32 +535,21 @@ export const searchInDocumentService = async ({ documentId, userId, query, k = 5
       }
     }
 
-    scored.sort((a, b) => b.score - a.score);
-    results = scored
-      .filter(r => r.score >= RAG_SEARCH_THRESHOLD)
-      .slice(0, normalizedK);
+    if (scored.length < rows.length) {
+      results = textSearchFallback();
+    } else {
+      scored.sort((a, b) => b.score - a.score);
+      results = scored
+        .filter(r => r.score >= RAG_SEARCH_THRESHOLD)
+        .slice(0, normalizedK);
 
-    // If threshold filtered everything, fallback to top scores
-    if (results.length === 0 && scored.length > 0) {
-      results = scored.slice(0, normalizedK);
+      // If threshold filtered everything, fallback to top scores
+      if (results.length === 0) {
+        results = scored.slice(0, normalizedK);
+      }
     }
   } else {
-    // Text search fallback if embedding unavailable
-    const qLower = query.toLowerCase();
-    const matched = rows
-      .map(r => {
-        const occurrences = (r.excerpt.toLowerCase().match(new RegExp(qLower.replace(/[^a-z0-9]/gi, ''), 'g')) || []).length;
-        return {
-          chunkId: r.chunkId,
-          chunkIndex: r.chunkIndex,
-          score: occurrences > 0 ? 0.5 + Math.min(occurrences * 0.1, 0.45) : 0.1,
-          excerpt: r.excerpt,
-        };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, normalizedK);
-
-    results = matched;
+    results = textSearchFallback();
   }
 
   return {
@@ -414,14 +600,21 @@ Answer:`;
 
   if (genAI) {
     try {
-      const response = await genAI.models.generateContent({
-        model: GEMINI_TEXT_MODEL,
-        contents: prompt,
-        config: { maxOutputTokens: 800 },
-      });
+      const response = await withGeminiNetworkRetry(() =>
+        genAI.models.generateContent({
+          model: GEMINI_TEXT_MODEL,
+          contents: prompt,
+          config: { maxOutputTokens: 800 },
+        }),
+      );
       answerText = response?.text || '';
     } catch (e) {
-      console.warn('Gemini text generation error for RAG query:', e.message);
+      const causeCode = e.cause?.code;
+      console.warn(
+        'Gemini text generation error for RAG query:',
+        e.message,
+        causeCode ? `(${causeCode})` : '',
+      );
     }
   }
 

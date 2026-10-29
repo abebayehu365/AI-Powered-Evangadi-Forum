@@ -19,7 +19,12 @@ import styles from './AnswerWithFeatures.module.css';
  *
  * @param {{ answerId: number, questionHash?: string, children: React.ReactNode }} props
  */
-export default function AnswerWithFeatures({ answerId, questionHash, children }) {
+export default function AnswerWithFeatures({
+  answerId,
+  questionHash,
+  isAuthor = false,
+  children,
+}) {
   const answerUrl = questionHash
     ? `${window.location.origin}/questions/${questionHash}#answer-${answerId}`
     : `${window.location.href}#answer-${answerId}`;
@@ -35,6 +40,7 @@ export default function AnswerWithFeatures({ answerId, questionHash, children })
         <StarRating
           itemType='answer'
           itemId={answerId}
+          isAuthor={isAuthor}
         />
         <ItemQrCodeButton
           itemType='answer'

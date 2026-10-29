@@ -68,9 +68,12 @@ export const loginController = async (req, res, next) => {
 export const getMeController = async (req, res, next) => {
   try {
     const user = await getMeService(req.user.id);
+    const avatarUrl = user.avatarUrl?.startsWith('/uploads/profile/')
+      ? req.protocol + '://' + req.get('host') + user.avatarUrl
+      : user.avatarUrl;
     res.status(StatusCodes.OK).json({
       success: true,
-      user,
+      user: { ...user, avatarUrl },
     });
   } catch (error) {
     next(error);

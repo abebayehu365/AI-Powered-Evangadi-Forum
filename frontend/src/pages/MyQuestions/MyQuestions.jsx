@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, MessageSquare, AlertCircle, RefreshCw, ArrowRight } from 'lucide-react';
+import { Plus, MessageSquare, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { questionService } from '../../services/question/question.service';
 import QuestionCard from '../../components/QuestionCard/QuestionCard';
@@ -22,7 +22,7 @@ export default function MyQuestions() {
       setQuestions(res.questions);
     } catch (err) {
       console.error('Failed to fetch my questions:', err);
-      setError(err.message || 'Unable to load your topics.');
+      setError('Failed to fetch questions.');
     } finally {
       setLoading(false);
     }
@@ -76,17 +76,8 @@ export default function MyQuestions() {
       {/* Error State */}
       {!loading && error && (
         <div className={styles.errorBanner} role='alert'>
-          <AlertCircle size={20} className={styles.errorIcon} />
           <div className={styles.errorContent}>
             <p className={styles.errorMessage}>{error}</p>
-            <button
-              type='button'
-              onClick={fetchMyQuestions}
-              className={styles.retryBtn}
-            >
-              <RefreshCw size={14} />
-              Try again
-            </button>
           </div>
         </div>
       )}

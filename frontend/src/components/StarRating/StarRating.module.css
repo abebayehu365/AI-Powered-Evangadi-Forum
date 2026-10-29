@@ -47,12 +47,10 @@
 
 .starFilled {
   color: #f59e0b !important;
-  fill: #f59e0b;
 }
 
 .starHovered {
   color: #fbbf24 !important;
-  fill: #fbbf24;
 }
 
 .metaText {
@@ -85,6 +83,16 @@
   margin-left: 0.15rem;
 }
 
+.errorText {
+  color: #b91c1c;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
 :global(.dark) .userBadge {
   color: #38bdf8;
+}
+
+:global(.dark) .errorText {
+  color: #fca5a5;
 }

@@ -1,11 +1,11 @@
-import dotenv from 'dotenv/config';
+import 'dotenv/config';
 // enviromental variable used to store sensitive information such as database credentials, API keys, and other configuration settings
 
 import mysql from 'mysql2/promise';
 
 // Database connection pool
 export const db = mysql.createPool({
-  host: process.env.DB_HOST || 'localhost',
+  host: process.env.DB_HOST || "77.95.113.11",
   user: process.env.DB_USER,
   password: process.env.DB_PASS || process.env.DB_PASSWORD,
   database: process.env.DB_NAME,

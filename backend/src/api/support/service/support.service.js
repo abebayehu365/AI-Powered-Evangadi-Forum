@@ -1,6 +1,17 @@
 import { GoogleGenAI } from '@google/genai';
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const readEnv = key => (process.env[key] || '').trim();
+const GEMINI_API_KEY = readEnv('GEMINI_API_KEY');
+const GEMINI_TEXT_MODEL = readEnv('GEMINI_TEXT_MODEL') || 'gemini-2.5-flash-lite';
+
+let ai = null;
+if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_here') {
+  try {
+    ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+  } catch (err) {
+    console.warn('Failed to initialize GoogleGenAI for support bot:', err.message);
+  }
+}
 
 // System prompt that scopes the bot to ForumStudy context
 const SYSTEM_PROMPT = `You are the EvangadiForum Support Assistant — a helpful, friendly, and concise AI assistant embedded in the EvangadiForum platform (an educational Q&A forum).
@@ -35,9 +46,12 @@ export const supportChatService = async ({ messages = [], userMessage }) => {
     parts: [{ text: userMessage }],
   });
 
-  const modelName = process.env.GEMINI_TEXT_MODEL || 'gemini-1.5-flash-latest';
+  if (!ai) {
+    throw new Error('Gemini API key is not configured for the support assistant');
+  }
+
   const response = await ai.models.generateContent({
-    model: modelName,
+    model: GEMINI_TEXT_MODEL,
     config: { systemInstruction: SYSTEM_PROMPT },
     contents: conversationHistory,
   });

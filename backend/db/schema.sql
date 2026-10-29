@@ -10,10 +10,13 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
     `user_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `username` VARCHAR(50) NULL UNIQUE,
     `first_name` VARCHAR(50) NOT NULL,
     `last_name` VARCHAR(50) NOT NULL,
     `email` VARCHAR(320) NOT NULL UNIQUE,
     `password_hash` VARCHAR(255) NOT NULL,
+    `bio` TEXT NULL,
+    `avatar_url` VARCHAR(2048) NULL,
     `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CHECK (`email` = LOWER(`email`)),
@@ -86,7 +89,24 @@ CREATE TABLE `answers` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- -----------------------------------------------------------------------------
--- 5. RAG: user-owned PDF documents, text chunks, and chunk embeddings
+-- 5. Star ratings for questions and answers
+-- -----------------------------------------------------------------------------
+CREATE TABLE `ratings` (
+    `rating_id` INT AUTO_INCREMENT PRIMARY KEY,
+    `user_id` INT NOT NULL,
+    `item_type` ENUM('question', 'answer') NOT NULL,
+    `item_id` INT NOT NULL,
+    `score` TINYINT NOT NULL COMMENT '1-5 star rating',
+    `created_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    `updated_at` TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT `chk_star_score` CHECK (`score` BETWEEN 1 AND 5),
+    UNIQUE KEY `uniq_user_item_rating` (`user_id`, `item_type`, `item_id`),
+    INDEX `idx_item_ratings` (`item_type`, `item_id`),
+    FOREIGN KEY (`user_id`) REFERENCES `users`(`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- -----------------------------------------------------------------------------
+-- 6. RAG: user-owned PDF documents, text chunks, and chunk embeddings
 -- -----------------------------------------------------------------------------
 DROP TABLE IF EXISTS `documents`;
 CREATE TABLE `documents` (

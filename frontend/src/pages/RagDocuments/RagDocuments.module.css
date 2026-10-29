@@ -97,6 +97,29 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.uploadBoxDragging {
+  background-color: color-mix(in srgb, var(--primary, #f97316) 8%, var(--surface, #ffffff));
+  border-color: var(--primary, #f97316);
+  border-style: solid;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary, #f97316) 15%, transparent);
+}
+
+.dropPrompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0;
+  color: var(--text-secondary, #475569);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.uploadBoxDragging .dropPrompt {
+  color: var(--primary-dark, #c2410c);
 }
 
 .uploadPolicy {
@@ -307,6 +330,194 @@
   color: var(--error, #ef4444);
 }
 
+.deleteDialogBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background:
+    radial-gradient(ellipse at center, rgba(30, 41, 59, 0.35), rgba(15, 23, 42, 0.78)),
+    rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(7px);
+}
+
+.deleteDialog {
+  position: relative;
+  overflow: hidden;
+  width: min(100%, 28rem);
+  padding: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 1.35rem;
+  background:
+    radial-gradient(ellipse at top right, rgba(249, 115, 22, 0.1), transparent 45%),
+    var(--surface, #ffffff);
+  box-shadow: 0 32px 90px rgba(15, 23, 42, 0.38);
+  color: var(--text-primary, #0f172a);
+  animation: deleteDialogEnter 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.deleteDialog::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 4px;
+  background: linear-gradient(90deg, #f97316, #ef4444, #fb7185);
+  content: '';
+}
+
+@keyframes deleteDialogEnter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.deleteDialogIcon {
+  display: grid;
+  width: 3.25rem;
+  height: 3.25rem;
+  margin-bottom: 1.2rem;
+  place-items: center;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #fff1f2, #fee2e2);
+  color: #dc2626;
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.14);
+}
+
+.deleteDialogEyebrow {
+  margin: 0 0 0.35rem;
+  color: #dc2626;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.deleteDialogTitle {
+  margin: 0;
+  color: var(--text-primary, #0f172a);
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.deleteDialogText {
+  margin: 0.65rem 0 0;
+  color: var(--text-secondary, #475569);
+  font-size: 0.9rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.deleteDialogText strong {
+  color: var(--text-primary, #0f172a);
+}
+
+.deleteDialogFile {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(249, 115, 22, 0.16);
+  border-radius: 0.85rem;
+  background: rgba(249, 115, 22, 0.055);
+  color: #ea580c;
+}
+
+.deleteDialogFileIcon {
+  flex: 0 0 auto;
+}
+
+.deleteDialogFileName {
+  overflow: hidden;
+  color: var(--text-primary, #0f172a);
+  font-size: 0.82rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.deleteDialogError {
+  margin: 0.9rem 0 0;
+  color: var(--error, #b91c1c);
+  font-size: 0.8125rem;
+}
+
+.deleteDialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+  margin-top: 1.5rem;
+}
+
+.cancelDeleteBtn,
+.confirmDeleteBtn {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.9rem;
+  border-radius: var(--radius-md, 0.5rem);
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+}
+
+.cancelDeleteBtn {
+  border: 1px solid var(--border, #cbd5e1);
+  background: var(--surface, #ffffff);
+  color: var(--text-secondary, #475569);
+}
+
+.cancelDeleteBtn:hover:not(:disabled) {
+  background: var(--surface-container-low, #f8fafc);
+}
+
+.confirmDeleteBtn {
+  border: 1px solid #dc2626;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: #ffffff;
+  box-shadow: 0 6px 14px rgba(220, 38, 38, 0.2);
+}
+
+.confirmDeleteBtn:hover:not(:disabled) {
+  border-color: #b91c1c;
+  background: #b91c1c;
+  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.28);
+}
+
+@media (max-width: 480px) {
+  .deleteDialog {
+    padding: 1.5rem;
+    border-radius: 1.1rem;
+  }
+
+  .deleteDialogActions {
+    flex-direction: column-reverse;
+  }
+
+  .cancelDeleteBtn,
+  .confirmDeleteBtn {
+    width: 100%;
+  }
+}
+
+.cancelDeleteBtn:disabled,
+.confirmDeleteBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Right Column */
 .activeColumn {
   min-width: 0;
@@ -413,6 +624,10 @@
 
 .placeholderIcon {
   color: var(--primary, #f97316);
+}
+
+.previewErrorIcon {
+  color: var(--error, #ef4444);
 }
 
 .placeholderTitle {

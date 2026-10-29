@@ -75,7 +75,7 @@ export default function QuestionDetail() {
       }
     } catch (err) {
       console.error('Failed to load question detail:', err);
-      setError(err.message || 'Unable to load question details.');
+      setError('Failed to load question details.');
     } finally {
       setLoading(false);
     }
@@ -243,17 +243,13 @@ export default function QuestionDetail() {
         </div>
 
         <div className={styles.errorCard}>
-          <AlertCircle size={32} className={styles.errorIcon} />
-          <h2 className={styles.errorTitle}>Question Not Found</h2>
-          <p className={styles.errorMessage}>
-            {error || 'This question might have been deleted or the link is invalid.'}
-          </p>
+          <p className={styles.errorMessage}>Failed to load question details.</p>
           <button
             type='button'
             className={styles.primaryBtn}
             onClick={() => navigate('/dashboard')}
           >
-            Browse all questions
+            Return to Dashboard
           </button>
         </div>
       </div>

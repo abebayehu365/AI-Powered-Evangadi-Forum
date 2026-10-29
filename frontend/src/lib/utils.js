@@ -38,7 +38,7 @@ export function timeAgo(dateInput) {
 }
 
 /**
- * Formats a date into standard M/D/YYYY display.
+ * Formats a date as an abbreviated month, two-digit day, and four-digit year.
  * @param {Date|string|number} dateInput
  * @returns {string}
  */
@@ -46,7 +46,12 @@ export function formatDate(dateInput) {
   if (!dateInput) return '';
   const d = new Date(dateInput);
   if (isNaN(d.getTime())) return '';
-  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short',
+    day: '2-digit',
+    year: 'numeric',
+    timeZone: 'UTC',
+  }).format(d);
 }
 
 /**

@@ -16,73 +16,108 @@ import QuestionDetail from './pages/QuestionDetail/QuestionDetail';
 import MyQuestions from './pages/MyQuestions/MyQuestions';
 import RagDocuments from './pages/RagDocuments/RagDocuments';
 
+// function App() {
+//   return (
+//     <BrowserRouter>
+//       <AuthProvider>
+//         <Routes>
+//           {/* Public routes */}
+//           <Route path='/' element={<Landing />} />
+//           <Route path='/auth' element={<Auth />} />
+
+//           {/* Protected routes with Layout shell */}
+//           <Route element={<Layout />}>
+//             <Route
+//               path='/dashboard'
+//               element={
+//                 <ProtectedRoute>
+//                   <Dashboard />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route
+//               path='/questions/ask'
+//               element={
+//                 <ProtectedRoute>
+//                   <PostQuestion />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route
+//               path='/my-questions'
+//               element={
+//                 <ProtectedRoute>
+//                   <MyQuestions />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route
+//               path='/questions/:questionHash'
+//               element={
+//                 <ProtectedRoute>
+//                   <QuestionDetail />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route
+//               path='/question/:questionHash'
+//               element={
+//                 <ProtectedRoute>
+//                   <QuestionDetail />
+//                 </ProtectedRoute>
+//               }
+//             />
+//             <Route
+//               path='/rag-documents'
+//               element={
+//                 <ProtectedRoute>
+//                   <RagDocuments />
+//                 </ProtectedRoute>
+//               }
+//             />
+//           </Route>
+
+//           {/* Catch-all redirect */}
+//           <Route path='*' element={<Navigate to='/' replace />} />
+//         </Routes>
+//       </AuthProvider>
+//     </BrowserRouter>
+//   );
+// }
+
+// export default App;
+
 function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          {/* Public routes */}
-          <Route path='/' element={<Landing />} />
-          <Route path='/auth' element={<Auth />} />
+          {/* Public */}
+          <Route path="/" element={<Landing />} />
+          <Route path="/auth" element={<Auth />} />
 
-          {/* Protected routes with Layout shell */}
-          <Route element={<Layout />}>
-            <Route
-              path='/dashboard'
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/questions/ask'
-              element={
-                <ProtectedRoute>
-                  <PostQuestion />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/my-questions'
-              element={
-                <ProtectedRoute>
-                  <MyQuestions />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/questions/:questionHash'
-              element={
-                <ProtectedRoute>
-                  <QuestionDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/question/:questionHash'
-              element={
-                <ProtectedRoute>
-                  <QuestionDetail />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path='/rag-documents'
-              element={
-                <ProtectedRoute>
-                  <RagDocuments />
-                </ProtectedRoute>
-              }
-            />
+          {/* Protected */}
+          <Route element={<ProtectedRoute />}>
+            <Route element={<Layout />}>
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/questions/ask" element={<PostQuestion />} />
+              <Route
+                path="/questions/:questionHash"
+                element={<QuestionDetail />}
+              />
+              <Route
+                path="/question/:questionHash"
+                element={<Navigate to="/questions/:questionHash" replace />}
+              />
+              <Route path="/my-questions" element={<MyQuestions />} />
+              <Route path="/rag-documents" element={<RagDocuments />} />
+            </Route>
           </Route>
 
-          {/* Catch-all redirect */}
-          <Route path='*' element={<Navigate to='/' replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>
   );
 }
-
 export default App;

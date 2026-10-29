@@ -3,10 +3,11 @@ import { GoogleGenAI } from '@google/genai';
 import { safeExecute } from '../../../../db/config.js';
 import { ServiceUnavailableError, NotFoundError } from '../../../utils/errors/index.js';
 
-const RECOMMEND_K = parseInt(process.env.RECOMMEND_K || '5', 10);
-const RECOMMEND_THRESHOLD = parseFloat(process.env.RECOMMEND_THRESHOLD || '0.75');
-const GEMINI_EMBEDDING_MODEL = process.env.GEMINI_EMBEDDING_MODEL || 'gemini-embedding-001';
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const readEnv = key => (process.env[key] || '').trim();
+const RECOMMEND_K = parseInt(readEnv('RECOMMEND_K') || '5', 10);
+const RECOMMEND_THRESHOLD = parseFloat(readEnv('RECOMMEND_THRESHOLD') || '0.75');
+const GEMINI_EMBEDDING_MODEL = readEnv('GEMINI_EMBEDDING_MODEL') || 'gemini-embedding-001';
+const GEMINI_API_KEY = readEnv('GEMINI_API_KEY');
 
 let genAI = null;
 if (GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_here') {

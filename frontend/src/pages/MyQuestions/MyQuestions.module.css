@@ -129,49 +129,44 @@
   animation: pulse 1.5s infinite ease-in-out;
 }
 
-/* Error Banner */
+/* Error State */
 .errorBanner {
+  min-height: 16rem;
   display: flex;
-  align-items: flex-start;
-  gap: 0.875rem;
-  padding: 1.25rem 1.5rem;
-  background-color: var(--error-light, #fee2e2);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-lg, 0.75rem);
-  color: var(--error, #ef4444);
-}
-
-.errorIcon {
-  flex-shrink: 0;
-  margin-top: 0.125rem;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  background-color: var(--surface, #ffffff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-xl, 1rem);
 }
 
 .errorContent {
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  min-width: 16rem;
+  padding: 1.25rem 1.75rem;
+  background-color: #fce8e8;
+  border: 1px solid #f5b7b7;
+  border-radius: var(--radius-md, 0.5rem);
+  box-shadow: 0 1px 0 rgba(148, 163, 184, 0.12);
 }
 
 .errorMessage {
   margin: 0;
-  font-size: 0.9375rem;
+  font-size: 0.95rem;
   font-weight: 500;
-  color: #991b1b;
+  color: #e75d5d;
+  text-align: center;
+}
+
+.errorIcon {
+  display: none;
 }
 
 .retryBtn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.8125rem;
-  font-weight: 600;
-  padding: 0.35rem 0.75rem;
-  background-color: #ffffff;
-  border: 1px solid #f87171;
-  border-radius: var(--radius-sm, 0.25rem);
-  color: #b91c1c;
-  cursor: pointer;
-  align-self: flex-start;
+  display: none;
 }
 
 /* Empty State */

@@ -113,19 +113,9 @@ export default function SidebarWithAddons() {
           ))}
 
           {/* Premium Status Banner in Sidebar */}
-          <div style={{ padding: '0 0.75rem', marginTop: '1rem' }}>
+          <div className={styles.sidebar__premiumWrap}>
             {isPremium ? (
-              <div
-                style={{
-                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.15) 100%)',
-                  border: '1px solid rgba(245, 158, 11, 0.3)',
-                  borderRadius: '12px',
-                  padding: '0.75rem 0.85rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '0.5rem',
-                }}
-              >
+              <div className={styles.sidebar__premiumBanner}>
                 <Sparkles size={16} color='#f59e0b' />
                 <div>
                   <strong style={{ fontSize: '0.8rem', color: '#d97706', display: 'block' }}>
@@ -140,22 +130,7 @@ export default function SidebarWithAddons() {
               <button
                 type='button'
                 onClick={() => setShowUpgradeModal(true)}
-                style={{
-                  width: '100%',
-                  background: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '12px',
-                  padding: '0.75rem',
-                  fontWeight: 700,
-                  fontSize: '0.82rem',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '0.4rem',
-                  boxShadow: '0 4px 10px rgba(2, 132, 199, 0.25)',
-                }}
+                className={styles.sidebar__upgradeBtn}
               >
                 <Sparkles size={15} color='#facc15' />
                 <span>Upgrade (5 Birr)</span>

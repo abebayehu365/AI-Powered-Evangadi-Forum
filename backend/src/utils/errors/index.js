@@ -31,6 +31,13 @@ export class UnauthenticatedError extends CustomAPIError {
   }
 }
 
+export class ForbiddenError extends CustomAPIError {
+  constructor(message) {
+    super(message);
+    this.statusCode = StatusCodes.FORBIDDEN;
+  }
+}
+
 export class ServiceUnavailableError extends CustomAPIError {
   constructor(message) {
     super(message);

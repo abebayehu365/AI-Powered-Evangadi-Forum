@@ -12,6 +12,78 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.25rem;
+}
+
+.profileHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.profileTitle {
+  margin: 0;
+  font-size: clamp(1.5rem, 2vw, 2.25rem);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.profileSubtitle {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.topBarActions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.iconAction {
+  width: 2.75rem;
+  height: 2.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+
+.premiumBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  background: linear-gradient(135deg, #f59e0b, #f97316);
+  color: #fff;
+  border-radius: 0.75rem;
+  padding: 0.65rem 0.9rem;
+  font-weight: 700;
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+}
+
+.userChip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.userChipAvatar {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 999px;
+  background: var(--primary);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 700;
 }
 
 .backBtn {
@@ -221,6 +293,17 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
+
+.hiddenFileInput {
+  display: none;
+}
+
+.editError {
+  margin: 0;
+  color: var(--error, #dc2626);
+  font-size: var(--text-sm);
+}
+
 .editDrawerHeader {
   display: flex;
   flex-direction: column;
@@ -384,7 +467,7 @@
 
 @media (min-width: 600px) {
   .editGrid {
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -685,6 +768,16 @@
   gap: 0.75rem;
 }
 
+.errorShell {
+  min-height: 28rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2rem 1rem;
+}
+
 .spinner {
   animation: spin 1s linear infinite;
   color: var(--primary);
@@ -701,6 +794,10 @@
 }
 
 .errorText {
-  font-size: var(--text-base);
-  color: var(--error);
+  margin: 0;
+  font-size: clamp(1.2rem, 2vw, 2rem);
+  line-height: 1.4;
+  color: #ef4444;
+  text-align: center;
+  font-weight: 600;
 }

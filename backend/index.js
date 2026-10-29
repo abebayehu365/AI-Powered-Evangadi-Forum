@@ -1,12 +1,14 @@
 import 'dotenv/config';
 import express from 'express';
+import path from 'path';
 import { db } from './db/config.js';
 import { mainRouter } from './src/api/routes.js';
 import { errorHandler } from './src/middleware/error-handler.js';
+import { resumeProcessingDocumentsService } from './src/api/rag/service/rag.service.js';
 import cors from 'cors';
 
 const app = express();
-const port = process.env.PORT || 3777;
+const port = process.env.PORT || 8000;
 
 // Middleware
 app.use(cors());
@@ -16,6 +18,10 @@ app.use(express.json());
 app.use(express.text({ type: ['text/plain', 'text/*'] }));
 // for reading form data and files
 app.use(express.urlencoded({ extended: true }));
+app.use(
+  '/uploads/profile',
+  express.static(path.resolve(process.cwd(), 'uploads/profile'), { maxAge: '1d' }),
+);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -41,6 +47,15 @@ const startServer = async () => {
         process.exit(1);
       }
       console.log(`Server running on port http://localhost:${port}`);
+      resumeProcessingDocumentsService()
+        .then(count => {
+          if (count > 0) {
+            console.log(`[RAG] Resuming ${count} pending document(s).`);
+          }
+        })
+        .catch(error => {
+          console.error('[RAG] Could not resume pending documents:', error.message);
+        });
     });
   } catch (error) {
     console.error(

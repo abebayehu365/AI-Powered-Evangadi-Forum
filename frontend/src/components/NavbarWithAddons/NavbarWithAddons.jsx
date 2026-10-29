@@ -4,6 +4,7 @@ import { Search, LogOut, Sparkles, User, Bell, UserPlus, Check } from 'lucide-re
 import ThemeToggle from '../ThemeToggle/ThemeToggle';
 import TelebirrModal from '../TelebirrModal/TelebirrModal';
 import { followService } from '../../services/follow/follow.service';
+import { formatDate } from '../../lib/utils';
 import styles from './NavbarWithAddons.module.css';
 
 /**
@@ -314,7 +315,7 @@ export default function NavbarWithAddons({ title, subtitle, user, onLogout }) {
                             <strong>{item.firstName} {item.lastName}</strong> started following you
                           </p>
                           <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
-                            {item.followedAt ? new Date(item.followedAt).toLocaleDateString() : ''}
+                            {item.followedAt ? formatDate(item.followedAt) : ''}
                           </span>
                         </div>
                       </Link>

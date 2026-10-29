@@ -223,8 +223,12 @@ async function fetchPdfObjectUrl(documentId) {
     });
     return URL.createObjectURL(response.data);
   } catch (error) {
-    console.warn('Backend PDF stream unavailable:', error.message);
-    return null;
+    if (error.response?.status === 404) {
+      throw new Error(
+        'The PDF file is missing from the server. Remove this entry and upload the PDF again.',
+      );
+    }
+    throw handleRagError(error);
   }
 }
 

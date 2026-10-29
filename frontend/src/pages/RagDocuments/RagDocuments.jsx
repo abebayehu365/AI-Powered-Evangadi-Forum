@@ -25,11 +25,19 @@ export default function RagDocuments() {
 
   // Active document selection
   const [activeDoc, setActiveDoc] = useState(null);
+  const activeDocId = activeDoc?.id || activeDoc?.documentId;
   const [pdfUrl, setPdfUrl] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfError, setPdfError] = useState(null);
+  const [documentToDelete, setDocumentToDelete] = useState(null);
+  const [deletingDocument, setDeletingDocument] = useState(false);
+  const [deleteError, setDeleteError] = useState(null);
+  const cancelDeleteRef = useRef(null);
 
   // Upload state
   const [selectedFile, setSelectedFile] = useState(null);
+  const [draggingFile, setDraggingFile] = useState(false);
+  const dragDepthRef = useRef(0);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState(null);
   const [uploadSuccess, setUploadSuccess] = useState(null);
@@ -54,8 +62,8 @@ export default function RagDocuments() {
       const list = await ragService.listDocuments();
       setDocuments(list);
       // Auto-select first document if none active
-      if (list.length > 0 && !activeDoc) {
-        setActiveDoc(list[0]);
+      if (list.length > 0) {
+        setActiveDoc(current => current || list[0]);
       }
     } catch (err) {
       console.error('Failed to list RAG documents:', err);
@@ -63,49 +71,72 @@ export default function RagDocuments() {
     } finally {
       setLoadingDocs(false);
     }
-  }, [activeDoc]);
+  }, []);
 
   useEffect(() => {
     fetchDocuments();
   }, [fetchDocuments]);
 
+  useEffect(() => {
+    if (!documentToDelete) return;
+    cancelDeleteRef.current?.focus();
+    const handleKeyDown = event => {
+      if (event.key === 'Escape' && !deletingDocument) {
+        setDocumentToDelete(null);
+        setDeleteError(null);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [documentToDelete, deletingDocument]);
+
   // Load PDF Object URL when active document changes
   useEffect(() => {
+    let cancelled = false;
     let currentUrl = null;
-    if (activeDoc) {
+    if (activeDocId) {
       setPdfLoading(true);
+      setPdfUrl(null);
+      setPdfError(null);
       setSearchResults(null);
       setAiAnswer(null);
       setSearchError(null);
       setAiError(null);
 
       ragService
-        .fetchPdfObjectUrl(activeDoc.id || activeDoc.documentId)
+        .fetchPdfObjectUrl(activeDocId)
         .then(url => {
           currentUrl = url;
+          if (cancelled) {
+            if (url) URL.revokeObjectURL(url);
+            return;
+          }
           setPdfUrl(url);
         })
         .catch(err => {
-          console.warn('Could not fetch PDF object URL:', err);
-          setPdfUrl(null);
+          if (!cancelled) {
+            setPdfError(err.message || 'Unable to load the PDF preview.');
+          }
         })
         .finally(() => {
-          setPdfLoading(false);
+          if (!cancelled) setPdfLoading(false);
         });
     } else {
       setPdfUrl(null);
+      setPdfError(null);
+      setPdfLoading(false);
     }
 
     return () => {
+      cancelled = true;
       if (currentUrl) {
         URL.revokeObjectURL(currentUrl);
       }
     };
-  }, [activeDoc]);
+  }, [activeDocId]);
 
-  // File selection
-  const handleFileChange = e => {
-    const file = e.target.files?.[0];
+  // File selection and drop share the same PDF validation.
+  const selectPdfFile = file => {
     setUploadError(null);
     setUploadSuccess(null);
     if (!file) {
@@ -118,6 +149,40 @@ export default function RagDocuments() {
       return;
     }
     setSelectedFile(file);
+  };
+
+  const handleFileChange = e => {
+    selectPdfFile(e.target.files?.[0]);
+  };
+
+  const handleDragEnter = event => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragDepthRef.current += 1;
+    setDraggingFile(true);
+  };
+
+  const handleDragOver = event => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleDragLeave = event => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+    if (dragDepthRef.current === 0) setDraggingFile(false);
+  };
+
+  const handleFileDrop = event => {
+    event.preventDefault();
+    event.stopPropagation();
+    dragDepthRef.current = 0;
+    setDraggingFile(false);
+    if (uploading) return;
+    const file = event.dataTransfer?.files?.[0];
+    if (file) selectPdfFile(file);
   };
 
   // Upload file
@@ -168,12 +233,16 @@ export default function RagDocuments() {
     }
   };
 
-  // Delete document
-  const handleDeleteDoc = async (e, docId) => {
+  const handleDeleteDoc = (e, doc) => {
     e.stopPropagation();
-    if (!window.confirm('Are you sure you want to remove this PDF from your workspace?')) {
-      return;
-    }
+    setDeleteError(null);
+    setDocumentToDelete(doc);
+  };
+
+  const confirmDeleteDoc = async () => {
+    if (!documentToDelete || deletingDocument) return;
+    const docId = documentToDelete.id || documentToDelete.documentId;
+    setDeletingDocument(true);
 
     try {
       await ragService.deleteDocument(docId);
@@ -182,8 +251,12 @@ export default function RagDocuments() {
       if ((activeDoc?.id || activeDoc?.documentId) === docId) {
         setActiveDoc(remaining[0] || null);
       }
+      setDocumentToDelete(null);
     } catch (err) {
-      alert(err.message || 'Failed to delete document.');
+      console.error('Failed to delete PDF:', err);
+      setDeleteError(err.message || 'Failed to delete document. Please try again.');
+    } finally {
+      setDeletingDocument(false);
     }
   };
 
@@ -257,9 +330,21 @@ export default function RagDocuments() {
             </div>
 
             {/* Upload Dropzone Box */}
-            <div className={styles.uploadBox}>
+            <div
+              className={`${styles.uploadBox} ${draggingFile ? styles.uploadBoxDragging : ''}`}
+              onDragEnter={handleDragEnter}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleFileDrop}
+              role='region'
+              aria-label='PDF upload drop area'
+            >
+              <p className={styles.dropPrompt}>
+                <Upload size={18} aria-hidden='true' />
+                <span>Drag and drop a PDF here, or choose a file</span>
+              </p>
               <p className={styles.uploadPolicy}>
-                Accepted format: PDF. Maximum file size is enforced by the server.
+                Accepted format: PDF. Maximum file size: 6 MB.
               </p>
 
               <input
@@ -384,7 +469,7 @@ export default function RagDocuments() {
 
                         <button
                           type='button'
-                          onClick={e => handleDeleteDoc(e, docId)}
+                          onClick={e => handleDeleteDoc(e, doc)}
                           className={styles.deleteDocBtn}
                           title='Delete document'
                           aria-label={`Delete ${doc.title || doc.filename}`}
@@ -438,6 +523,14 @@ export default function RagDocuments() {
                       title={activeDoc.title || 'PDF Document'}
                       className={styles.pdfIframe}
                     />
+                  ) : !pdfLoading && pdfError ? (
+                    <div className={styles.previewPlaceholder} role='alert'>
+                      <AlertCircle size={40} className={styles.previewErrorIcon} />
+                      <strong className={styles.placeholderTitle}>
+                        PDF preview unavailable
+                      </strong>
+                      <p className={styles.placeholderSub}>{pdfError}</p>
+                    </div>
                   ) : !pdfLoading ? (
                     <div className={styles.previewPlaceholder}>
                       <FileText size={40} className={styles.placeholderIcon} />
@@ -445,8 +538,8 @@ export default function RagDocuments() {
                         {activeDoc.title || activeDoc.filename}
                       </strong>
                       <p className={styles.placeholderSub}>
-                        PDF preview is ready. If inline display is blocked by your browser,
-                        you can still run semantic search and ask questions below.
+                        The PDF preview could not be loaded. You can still run semantic
+                        search and ask questions below.
                       </p>
                     </div>
                   ) : null}
@@ -612,6 +705,81 @@ export default function RagDocuments() {
           )}
         </main>
       </div>
+
+      {documentToDelete && (
+        <div
+          className={styles.deleteDialogBackdrop}
+          onClick={event => {
+            if (event.target === event.currentTarget && !deletingDocument) {
+              setDocumentToDelete(null);
+              setDeleteError(null);
+            }
+          }}
+          role='dialog'
+          aria-modal='true'
+          aria-labelledby='delete-pdf-title'
+          aria-describedby='delete-pdf-description'
+        >
+          <div className={styles.deleteDialog}>
+            <div className={styles.deleteDialogIcon}>
+              <Trash2 size={21} />
+            </div>
+            <p className={styles.deleteDialogEyebrow}>Permanent action</p>
+            <h2 id='delete-pdf-title' className={styles.deleteDialogTitle}>
+              Remove this PDF?
+            </h2>
+            <p id='delete-pdf-description' className={styles.deleteDialogText}>
+              This PDF and its indexed content will be removed from your workspace.
+              This action cannot be undone.
+            </p>
+            <div className={styles.deleteDialogFile}>
+              <FileText size={20} className={styles.deleteDialogFileIcon} />
+              <span className={styles.deleteDialogFileName}>
+                {documentToDelete.title ||
+                  documentToDelete.filename ||
+                  'Untitled PDF'}
+              </span>
+            </div>
+            {deleteError && (
+              <p className={styles.deleteDialogError} role='alert'>
+                {deleteError}
+              </p>
+            )}
+            <div className={styles.deleteDialogActions}>
+              <button
+                ref={cancelDeleteRef}
+                type='button'
+                className={styles.cancelDeleteBtn}
+                disabled={deletingDocument}
+                onClick={() => {
+                  setDocumentToDelete(null);
+                  setDeleteError(null);
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type='button'
+                className={styles.confirmDeleteBtn}
+                disabled={deletingDocument}
+                onClick={confirmDeleteDoc}
+              >
+                {deletingDocument ? (
+                  <>
+                    <Loader2 size={16} className={styles.spinner} />
+                    Removing...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 size={16} />
+                    Remove PDF
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -106,7 +106,10 @@ function handleAuthError(error) {
 async function getMe() {
   try {
     const response = await apiClient.get('/api/auth/me');
-    const user = response.data.user;
+    const responseUser = response.data.user;
+    const user = responseUser
+      ? { ...responseUser, avatar: responseUser.avatarUrl || responseUser.avatar }
+      : null;
     if (user) {
       localStorage.setItem('user', JSON.stringify(user));
     }

@@ -3,30 +3,22 @@ import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import {
   User, MessageSquare, BookOpen, Users, UserPlus,
   Calendar, ChevronRight, Edit3, CheckCircle, X, Loader2,
-  Camera, Upload, Link2, AtSign, Sparkles, ShieldCheck
+  Camera, Upload, AtSign, Sparkles, ShieldCheck, Search
 } from 'lucide-react';
 import { profileService } from '../../services/profile/profile.service.js';
 import { followService } from '../../services/follow/follow.service.js';
+import { formatDate } from '../../lib/utils';
 import FollowButton from '../../components/FollowButton/FollowButton';
 import SecurityPlusSettings from '../../components/SecurityPlusSettings/SecurityPlusSettings';
 import ThemeToggle from '../../components/ThemeToggle/ThemeToggle';
 import { useAuth } from '../../contexts/AuthContext';
 import styles from './Profile.module.css';
 
-const AVATAR_PRESETS = [
-  { label: '🧑‍💻 Coder', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Coder&backgroundColor=b6e3f4' },
-  { label: '🚀 Astro', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Astro&backgroundColor=c0aede' },
-  { label: '🐱 Pixel', url: 'https://api.dicebear.com/7.x/bottts/svg?seed=Pixel&backgroundColor=ffd5dc' },
-  { label: '🎓 Scholar', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix&backgroundColor=d1d4f9' },
-  { label: '⚡ Spark', url: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Zoe&backgroundColor=ffdfbf' },
-  { label: '🌟 Pro', url: 'https://api.dicebear.com/7.x/personas/svg?seed=Alex&backgroundColor=c0aede' },
-];
-
 export default function Profile() {
   const { userId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, setUser } = useAuth();
   const activeUserId = userId || currentUser?.id;
 
   const [profile, setProfile]             = useState(null);
@@ -35,12 +27,11 @@ export default function Profile() {
   const [editing, setEditing]             = useState(false);
   const [editFirstName, setEditFirstName] = useState('');
   const [editLastName, setEditLastName]   = useState('');
-  const [editUsername, setEditUsername]   = useState('');
-  const [editBio, setEditBio]             = useState('');
-  const [editAvatarUrl, setEditAvatarUrl] = useState('');
+  const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState('');
-  const [saving, setSaving]               = useState(false);
-  const [saved, setSaved]                 = useState(false);
+  const [editError, setEditError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   
   // Tab state: 'questions' | 'answers' | 'followers' | 'following' | 'security'
   const initialTab = new URLSearchParams(location.search).get('tab') || 'questions';
@@ -62,11 +53,8 @@ export default function Profile() {
       .then(data => {
         if (!cancelled) {
           setProfile(data);
-          setEditBio(data.bio || '');
-          setEditUsername(data.username || '');
           setEditFirstName(data.firstName || '');
           setEditLastName(data.lastName || '');
-          setEditAvatarUrl(data.avatarUrl || '');
         }
       })
       .catch(err => {
@@ -100,36 +88,40 @@ export default function Profile() {
     if (!profile) return;
     setEditFirstName(profile.firstName || '');
     setEditLastName(profile.lastName || '');
-    setEditUsername(profile.username || '');
-    setEditBio(profile.bio || '');
-    setEditAvatarUrl(profile.avatarUrl || '');
+    setAvatarFile(null);
     setAvatarPreview(profile.avatarUrl || '');
+    setEditError('');
     setEditing(true);
   };
 
   const cancelEdit = () => {
     setEditing(false);
+    setAvatarFile(null);
     setAvatarPreview(profile?.avatarUrl || '');
+    setEditError('');
   };
 
-  const handleFileUpload = (e) => {
+  const handleFileUpload = e => {
     const file = e.target.files?.[0];
+    e.target.value = '';
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) {
-      alert('Image size should be less than 2MB');
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      setAvatarFile(null);
+      setAvatarPreview(profile?.avatarUrl || '');
+      setEditError('Choose a JPG, PNG, or WebP image.');
       return;
     }
+    if (file.size > 2 * 1024 * 1024) {
+      setAvatarFile(null);
+      setAvatarPreview(profile?.avatarUrl || '');
+      setEditError('Profile pictures must be 2 MB or smaller.');
+      return;
+    }
+    setEditError('');
+    setAvatarFile(file);
     const reader = new FileReader();
-    reader.onload = () => {
-      setEditAvatarUrl(reader.result);
-      setAvatarPreview(reader.result);
-    };
+    reader.onload = () => setAvatarPreview(reader.result);
     reader.readAsDataURL(file);
-  };
-
-  const handleSelectPreset = (url) => {
-    setEditAvatarUrl(url);
-    setAvatarPreview(url);
   };
 
   const handleSaveProfile = async (e) => {
@@ -137,37 +129,33 @@ export default function Profile() {
     setSaving(true);
     try {
       const updated = await profileService.update({
-        username: editUsername,
-        firstName: editFirstName,
-        lastName: editLastName,
-        bio: editBio,
-        avatarUrl: editAvatarUrl || undefined,
+        firstName: editFirstName.trim(),
+        lastName: editLastName.trim(),
+        avatarFile,
       });
 
       setProfile(updated);
+      setAvatarFile(null);
       setSaved(true);
       setEditing(false);
 
-      // Sync user to localStorage so Navbar displays updated name & avatar
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        try {
-          const userObj = JSON.parse(stored);
-          const newUserObj = {
-            ...userObj,
-            firstName: updated.firstName,
-            lastName: updated.lastName,
-            username: updated.username,
-            avatar: updated.avatarUrl || userObj.avatar,
-          };
-          localStorage.setItem('user', JSON.stringify(newUserObj));
-          window.dispatchEvent(new Event('storage'));
-        } catch {}
+      const updatedUser = {
+        ...currentUser,
+        firstName: updated.firstName,
+        lastName: updated.lastName,
+        avatar: updated.avatarUrl || currentUser?.avatar,
+        avatarUrl: updated.avatarUrl,
+      };
+      setUser(updatedUser);
+      try {
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      } catch (storageError) {
+        console.warn('Could not update cached profile data:', storageError);
       }
 
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
-      alert(err?.response?.data?.msg || 'Failed to update profile.');
+      setEditError(err?.response?.data?.msg || 'Failed to update profile.');
     } finally {
       setSaving(false);
     }
@@ -181,7 +169,7 @@ export default function Profile() {
     )}&background=f97316&color=fff&size=128`;
 
   const joinDate = profile?.createdAt
-    ? new Date(profile.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long' })
+    ? formatDate(profile.createdAt)
     : '';
 
   if (loading) {
@@ -195,11 +183,35 @@ export default function Profile() {
 
   if (error || !profile) {
     return (
-      <div className={styles.centered}>
-        <p className={styles.errorText}>{error || 'Profile not found'}</p>
-        <button className={styles.backBtn} onClick={() => navigate(-1)}>
-          ← Go back
-        </button>
+      <div className={styles.page}>
+        <div className={styles.topBar}>
+          <div className={styles.profileHeader}>
+            <h1 className={styles.profileTitle}>Learner Profile</h1>
+            <p className={styles.profileSubtitle}>
+              View learner statistics, questions, answers, and follower connections.
+            </p>
+          </div>
+
+          <div className={styles.topBarActions}>
+            <button type='button' className={styles.iconAction} aria-label='Search profile'>
+              <Search size={18} />
+            </button>
+            <button type='button' className={styles.premiumBtn}>
+              <Sparkles size={14} />
+              PREMIUM
+            </button>
+            <div className={styles.userChip}>
+              <span className={styles.userChipAvatar}>AM</span>
+            </div>
+          </div>
+        </div>
+
+        <div className={styles.errorShell}>
+          <p className={styles.errorText}>{error || 'Profile not found'}</p>
+          <button className={styles.backBtn} onClick={() => navigate(-1)}>
+            ← Go back
+          </button>
+        </div>
       </div>
     );
   }
@@ -281,7 +293,7 @@ export default function Profile() {
             {/* View-mode Bio */}
             {!editing && (
               <p className={styles.bio}>
-                {profile.bio || (isOwn ? 'Add a bio to tell others about yourself.' : 'No bio yet.')}
+                {profile.bio || 'No bio yet.'}
               </p>
             )}
           </div>
@@ -307,143 +319,70 @@ export default function Profile() {
                 <span>Edit Profile</span>
               </div>
               <span className={styles.editDrawerSubtitle}>
-                Update your username, profile image, and bio.
+                Edit your name and profile picture.
               </span>
             </div>
 
-            {/* Avatar Selector Options */}
             <div className={styles.editSection}>
-              <label className={styles.editLabel}>Profile Image</label>
-
+              <label className={styles.editLabel} htmlFor='profile-picture'>Profile Picture</label>
               <div className={styles.avatarTools}>
-                {/* Upload from device */}
                 <input
+                  id='profile-picture'
                   type='file'
                   ref={fileInputRef}
                   onChange={handleFileUpload}
-                  accept='image/*'
-                  style={{ display: 'none' }}
+                  accept='image/jpeg,image/png,image/webp'
+                  className={styles.hiddenFileInput}
                 />
                 <button
                   type='button'
                   className={styles.uploadBtn}
                   onClick={() => fileInputRef.current?.click()}
+                  disabled={saving}
                 >
                   <Upload size={14} />
-                  <span>Upload from Computer</span>
+                  <span>{avatarFile ? avatarFile.name : 'Choose a picture'}</span>
                 </button>
-
-                {/* Direct URL input */}
-                <div className={styles.urlInputWrap}>
-                  <Link2 size={14} className={styles.urlInputIcon} />
-                  <input
-                    type='url'
-                    className={styles.urlInput}
-                    placeholder='Or paste image URL (https://…)'
-                    value={editAvatarUrl}
-                    onChange={(e) => {
-                      setEditAvatarUrl(e.target.value);
-                      setAvatarPreview(e.target.value);
-                    }}
-                  />
-                </div>
-              </div>
-
-              {/* Instant Preset Avatars */}
-              <div className={styles.presetGroup}>
-                <span className={styles.presetHeading}>
-                  <Sparkles size={12} /> Instant Avatars:
-                </span>
-                <div className={styles.presetChips}>
-                  {AVATAR_PRESETS.map((p) => (
-                    <button
-                      key={p.url}
-                      type='button'
-                      className={`${styles.presetChip} ${editAvatarUrl === p.url ? styles.presetChipActive : ''}`}
-                      onClick={() => handleSelectPreset(p.url)}
-                    >
-                      <img src={p.url} alt={p.label} className={styles.presetImg} />
-                      <span>{p.label}</span>
-                    </button>
-                  ))}
-                </div>
+                <span className={styles.fieldHint}>JPG, PNG, or WebP; up to 2 MB.</span>
               </div>
             </div>
 
-            {/* Username & Names Grid */}
             <div className={styles.editGrid}>
-              {/* Username */}
               <div className={styles.fieldGroup}>
-                <label className={styles.editLabel} htmlFor='profile-username'>
-                  Username
-                </label>
-                <div className={styles.inputWithPrefix}>
-                  <span className={styles.inputPrefix}>@</span>
-                  <input
-                    id='profile-username'
-                    type='text'
-                    className={styles.textInput}
-                    placeholder='your_username'
-                    value={editUsername}
-                    onChange={(e) => setEditUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ''))}
-                    maxLength={30}
-                  />
-                </div>
-                <span className={styles.fieldHint}>Letters, numbers, and underscores only.</span>
-              </div>
-
-              {/* First Name */}
-              <div className={styles.fieldGroup}>
-                <label className={styles.editLabel} htmlFor='profile-first-name'>
-                  First Name
-                </label>
+                <label className={styles.editLabel} htmlFor='profile-first-name'>First Name</label>
                 <input
                   id='profile-first-name'
                   type='text'
                   className={styles.textInput}
                   placeholder='First name'
                   value={editFirstName}
-                  onChange={(e) => setEditFirstName(e.target.value)}
+                  onChange={e => setEditFirstName(e.target.value)}
                   maxLength={50}
+                  autoComplete='given-name'
                   required
                 />
               </div>
-
-              {/* Last Name */}
               <div className={styles.fieldGroup}>
-                <label className={styles.editLabel} htmlFor='profile-last-name'>
-                  Last Name
-                </label>
+                <label className={styles.editLabel} htmlFor='profile-last-name'>Last Name</label>
                 <input
                   id='profile-last-name'
                   type='text'
                   className={styles.textInput}
                   placeholder='Last name'
                   value={editLastName}
-                  onChange={(e) => setEditLastName(e.target.value)}
+                  onChange={e => setEditLastName(e.target.value)}
                   maxLength={50}
+                  autoComplete='family-name'
                   required
                 />
               </div>
             </div>
 
-            {/* Bio textarea */}
-            <div className={styles.fieldGroup}>
-              <label className={styles.editLabel} htmlFor='profile-bio'>
-                Bio
-              </label>
-              <textarea
-                id='profile-bio'
-                className={styles.bioTextarea}
-                value={editBio}
-                onChange={(e) => setEditBio(e.target.value)}
-                placeholder='Tell other learners what you are studying or working on…'
-                rows={3}
-                maxLength={280}
-              />
-              <span className={styles.charCount}>{editBio.length}/280</span>
-            </div>
-
+            {editError && (
+              <p className={styles.editError} role='alert'>
+                {editError}
+              </p>
+            )}
             {/* Action buttons */}
             <div className={styles.editActions}>
               <button
@@ -551,7 +490,7 @@ export default function Profile() {
                   <div className={styles.activityContent}>
                     <p className={styles.activityTitle}>{q.title}</p>
                     <span className={styles.activityDate}>
-                      {new Date(q.createdAt).toLocaleDateString()}
+                      {formatDate(q.createdAt)}
                     </span>
                   </div>
                   <ChevronRight size={16} className={styles.activityArrow} />
@@ -576,7 +515,7 @@ export default function Profile() {
                   <div className={styles.activityContent}>
                     <p className={styles.activityTitle}>{a.questionTitle}</p>
                     <span className={styles.activityDate}>
-                      {new Date(a.createdAt).toLocaleDateString()}
+                      {formatDate(a.createdAt)}
                     </span>
                   </div>
                   <ChevronRight size={16} className={styles.activityArrow} />
@@ -633,7 +572,7 @@ export default function Profile() {
                         {follower.firstName} {follower.lastName}
                       </Link>
                       <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b' }}>
-                        Followed {follower.followedAt ? new Date(follower.followedAt).toLocaleDateString() : ''}
+                        Followed {follower.followedAt ? formatDate(follower.followedAt) : ''}
                       </span>
                     </div>
                   </div>
@@ -694,7 +633,7 @@ export default function Profile() {
                         {person.firstName} {person.lastName}
                       </Link>
                       <span style={{ display: 'block', fontSize: '0.75rem', color: '#64748b' }}>
-                        Following since {person.followedAt ? new Date(person.followedAt).toLocaleDateString() : ''}
+                        Following since {person.followedAt ? formatDate(person.followedAt) : ''}
                       </span>
                     </div>
                   </div>

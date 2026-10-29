@@ -2,8 +2,10 @@ import 'dotenv/config';
 import { GoogleGenAI } from '@google/genai';
 import { ServiceUnavailableError } from '../../../utils/errors/index.js';
 
-const GOOGLE_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_TEXT_MODEL = process.env.GEMINI_TEXT_MODEL || 'gemini-1.5-flash-latest';
+const readEnv = key => (process.env[key] || '').trim();
+const GOOGLE_API_KEY = readEnv('GEMINI_API_KEY');
+const GEMINI_TEXT_MODEL = readEnv('GEMINI_TEXT_MODEL') || 'gemini-2.5-flash-lite';
+const GEMINI_MAX_ATTEMPTS = 3;
 
 let genAI = null;
 if (GOOGLE_API_KEY && GOOGLE_API_KEY !== 'your_gemini_api_key_here') {
@@ -29,18 +31,34 @@ function parseJsonObjectFromGeminiText(raw) {
   }
 }
 
+async function withGeminiNetworkRetry(request) {
+  for (let attempt = 1; ; attempt++) {
+    try {
+      return await request();
+    } catch (error) {
+      if (error.message !== 'fetch failed' || attempt >= GEMINI_MAX_ATTEMPTS) {
+        throw error;
+      }
+
+      await new Promise(resolve => setTimeout(resolve, 500 * 2 ** (attempt - 1)));
+    }
+  }
+}
+
 async function fetchGeminiJsonTextResponse(userPrompt) {
   if (!genAI) {
     return null;
   }
 
-  const response = await genAI.models.generateContent({
-    model: GEMINI_TEXT_MODEL,
-    contents: userPrompt,
-    config: {
-      maxOutputTokens: 300,
-    },
-  });
+  const response = await withGeminiNetworkRetry(() =>
+    genAI.models.generateContent({
+      model: GEMINI_TEXT_MODEL,
+      contents: userPrompt,
+      config: {
+        maxOutputTokens: 300,
+      },
+    }),
+  );
 
   const text = response?.text;
   return typeof text === 'string' ? text : '';
@@ -75,7 +93,11 @@ Rules:
     }
     return { tips };
   } catch (error) {
-    console.error('generateQuestionDraftCoachService error:', error.message);
+    console.error(
+      'generateQuestionDraftCoachService error:',
+      error.message,
+      error.cause?.code ? `(${error.cause.code})` : '',
+    );
     return {
       tips: [
         'Add any error messages or exact behavior you are experiencing',
@@ -119,7 +141,11 @@ RULES:
 
     return { level, note };
   } catch (error) {
-    console.error('assessAnswerAgainstQuestionService error:', error.message);
+    console.error(
+      'assessAnswerAgainstQuestionService error:',
+      error.message,
+      error.cause?.code ? `(${error.cause.code})` : '',
+    );
     return {
       level: 'partial',
       note: 'Answer addresses aspects of the question and provides relevant direction.',

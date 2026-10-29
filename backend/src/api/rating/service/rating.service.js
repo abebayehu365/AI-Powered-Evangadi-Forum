@@ -1,5 +1,9 @@
 import { safeExecute } from '../../../../db/config.js';
-import { BadRequestError, NotFoundError } from '../../../utils/errors/index.js';
+import {
+  BadRequestError,
+  ForbiddenError,
+  NotFoundError,
+} from '../../../utils/errors/index.js';
 
 /**
  * --------------------------------------------------------------------------
@@ -14,12 +18,13 @@ async function validateItemExists(itemType, itemId) {
   const table = itemType === 'question' ? 'questions' : 'answers';
   const idCol = itemType === 'question' ? 'question_id' : 'answer_id';
   const rows = await safeExecute(
-    `SELECT ${idCol} FROM ${table} WHERE ${idCol} = ?`,
+    `SELECT ${idCol} AS itemId, user_id AS ownerId FROM ${table} WHERE ${idCol} = ?`,
     [itemId],
   );
   if (!rows.length) {
     throw new NotFoundError(`${itemType === 'question' ? 'Question' : 'Answer'} not found.`);
   }
+  return rows[0];
 }
 
 /**
@@ -31,7 +36,10 @@ export const rateStarItemService = async ({ userId, itemType, itemId, score }) =
     throw new BadRequestError('Star rating score must be an integer from 1 to 5 (or 0 to remove).');
   }
 
-  await validateItemExists(itemType, itemId);
+  const item = await validateItemExists(itemType, itemId);
+  if (Number(item.ownerId) === Number(userId)) {
+    throw new ForbiddenError(`You cannot rate your own ${itemType}.`);
+  }
 
   if (numScore === 0) {
     await safeExecute(

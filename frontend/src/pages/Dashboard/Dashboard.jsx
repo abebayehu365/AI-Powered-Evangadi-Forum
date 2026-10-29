@@ -7,8 +7,6 @@ import {
   Sparkles,
   Search,
   X,
-  RefreshCw,
-  AlertCircle,
   ArrowRight,
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -46,7 +44,7 @@ export default function Dashboard() {
       }
     } catch (err) {
       console.error('Failed to load questions:', err);
-      setError(err.message || 'Unable to load discussion questions.');
+      setError('Failed to load questions.');
     } finally {
       setLoading(false);
     }
@@ -235,17 +233,8 @@ export default function Dashboard() {
         {/* Error State */}
         {!loading && error && (
           <div className={styles.errorBanner} role='alert'>
-            <AlertCircle size={20} className={styles.errorIcon} />
             <div className={styles.errorContent}>
               <p className={styles.errorMessage}>{error}</p>
-              <button
-                type='button'
-                onClick={fetchQuestions}
-                className={styles.retryBtn}
-              >
-                <RefreshCw size={14} />
-                Try again
-              </button>
             </div>
           </div>
         )}
